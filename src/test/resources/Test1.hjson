@@ -2,10 +2,44 @@
     "servers": {
         "gmail imap": {
             hostname: imap.gmail.com
+            ssl: true
+            protocol: imap
         },
 
         "zoho imap": {
             hostname: imap.zoho.com
+            ssl: false
+            protocol: imap
+        }
+
+        "some pop3": {
+            hostname: some.pop3.com
+            ssl: false
+            protocol: pop3
+        }
+    }
+
+    "option sets": {
+        "standard": {
+            logfile:   /path/to/${AccountName}.log
+            mda:       /path/to/mda --args sth
+            interval:  1
+        }
+    }
+
+    "accounts": {
+        "antonone1@gmail.com": {
+            user:      antonone1@gmail.com
+            pass:      somepassw0rd
+            server:    gmail imap
+            template:  standard
+        }
+
+        "antek11@zoho.com": {
+            user:      antek11@zoho.com
+            pass:      "fqw9fh-qfgq-e0i"
+            server:    zoho imap
+            template:  standard
         }
     }
 }

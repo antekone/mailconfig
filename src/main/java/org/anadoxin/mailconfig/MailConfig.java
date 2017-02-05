@@ -26,7 +26,51 @@ public class MailConfig {
     }
 
     public List<String> getServerList() {
-        JsonObject serversObj = this.config.valueOf("servers").asObject();
+        try {
+            return this.config.get("servers").asObject().names();
+        } catch(UnsupportedOperationException e) {
+            Log.put("can't cast 'servers' from HJSON to Array");
+            return null;
+        }
+    }
+
+    public ServerInfo getServerByJsonValue(JsonValue jv) throws UnsupportedOperationException {
+        ServerInfo si = new ServerInfo();
+        JsonObject jo = jv.asObject();
+
+        si.setHostName(jo.get("hostname").asString());
+        si.setWantSSL(jo.get("ssl").asBoolean());
+        si.setProtocol(jo.get("protocol").asString());
+
+        return si;
+    }
+
+    private JsonValue getJsonValueInDict(JsonValue collection, String settingKey) {
+        try {
+            for(JsonObject.Member n: collection.asObject()) {
+                if(n.getName().compareTo(settingKey) == 0) {
+                    return n.getValue();
+                }
+            }
+        } catch(UnsupportedOperationException e) {
+            Log.put("Can't find value when searching for `%s`: %s", settingKey, e.getMessage());
+        }
+
         return null;
     }
+
+    public ServerInfo getServerByName(String name) {
+        JsonValue serverObject = getJsonValueInDict(this.config.get("servers"), name);
+        if(serverObject == null) {
+            Log.put("can't find selected server: `%s`", name);
+            return null;
+        }
+
+        ServerInfo si = getServerByJsonValue(serverObject);
+        return si;
+    }
+
+//    public String getLogFile() {
+//        return getJsonValueInDict(this.config.get("options"), "logfile").asString();
+//    }
 }

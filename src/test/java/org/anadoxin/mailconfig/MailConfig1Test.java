@@ -16,14 +16,68 @@ class MailConfig1Test {
     void loadMailConfig() throws FileNotFoundException {
         InputStream dataFile = this.getClass().getClassLoader().getResourceAsStream("Test1.hjson");
         assertNotNull(dataFile);
+
         InputStreamReader rdr = new InputStreamReader(dataFile);
         assertTrue(mc.initFromReader(rdr));
     }
 
     @Test
-    void ListServersValidArguments1() {
+    void ListServersValidArgumentsNullCheck() {
         List<String> servers = mc.getServerList();
         assertNotNull(servers);
     }
-}
 
+    @Test
+    void ListServersValidArgumentsSizeMoreThan0() {
+        List<String> servers = mc.getServerList();
+        assertEquals(servers.size(), 3);
+    }
+
+    @Test
+    void ListServersValid() {
+        List<String> servers = mc.getServerList();
+        assertEquals(servers.get(0), "gmail imap");
+        assertEquals(servers.get(1), "zoho imap");
+    }
+
+    @Test
+    void GetServerByName1NotNull() {
+        ServerInfo si = mc.getServerByName("gmail imap");
+        assertNotNull(si);
+    }
+
+    @Test
+    void GetServerByName1CheckHostName() {
+        ServerInfo si = mc.getServerByName("gmail imap");
+        assertNotNull(si.getHostName());
+    }
+
+    @Test
+    void GetServerByName1CheckHostNameValue() {
+        ServerInfo si = mc.getServerByName("gmail imap");
+        assertEquals(si.getHostName(), "imap.gmail.com");
+    }
+
+    @Test
+    void GetServerByName2CheckHostNameValue() {
+        ServerInfo si = mc.getServerByName("zoho imap");
+        assertEquals(si.getHostName(), "imap.zoho.com");
+    }
+
+    @Test
+    void GetServerByName3CheckSSL1() {
+        assertTrue(mc.getServerByName("gmail imap").isWantSSL());
+    }
+
+    @Test
+    void GetServerByName3CheckSSL2() {
+        assertFalse(mc.getServerByName("zoho imap").isWantSSL());
+    }
+
+    @Test
+    void GetServerByName4Protocol() {
+        assertEquals(mc.getServerByName("gmail imap").getProtocol(), "imap");
+        assertEquals(mc.getServerByName("zoho imap").getProtocol(), "imap");
+        assertEquals(mc.getServerByName("some pop3").getProtocol(), "pop3");
+    }
+}
