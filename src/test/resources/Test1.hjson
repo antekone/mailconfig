@@ -21,9 +21,9 @@
 
     "option sets": {
         "standard": {
-            logfile:   /path/to/${AccountName}.log
-            mda:       /path/to/mda --args sth
-            interval:  1
+            logfile:   "/path/to/${AccountName}.log"
+            mda:       "/path/to/mda --args sth"
+            interval:  "1"
         }
     }
 

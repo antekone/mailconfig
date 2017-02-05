@@ -65,12 +65,6 @@ class Boot {
                 Log.put("Error: processing configuration file `%s` failed. Aborting.", this.configFileName);
                 return;
             }
-
-            Log.put("Server list:");
-            for(String s: mconfig.getServerList()) {
-                Log.put("- server: %s", s);
-            }
-
         } catch(IOException e) {
             Log.put("IOException: %s", e.toString());
         }
