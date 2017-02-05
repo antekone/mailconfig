@@ -1,0 +1,11 @@
+{
+    "servers": {
+        "gmail imap": {
+            hostname: imap.gmail.com
+        },
+
+        "zoho imap": {
+            hostname: imap.zoho.com
+        }
+    }
+}

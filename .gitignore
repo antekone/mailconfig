@@ -1,5 +1,4 @@
 build
-*.hjson
 .gradle
 *.sh
 src/*.sh

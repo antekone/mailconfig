@@ -1,7 +1,6 @@
 package org.anadoxin.mailconfig.boot;
 
 import org.anadoxin.mailconfig.*;
-import org.hjson.*;
 import java.io.*;
 import org.apache.commons.cli.*;
 
@@ -65,6 +64,11 @@ class Boot {
             if(!mconfig.initFromReader(rdr)) {
                 Log.put("Error: processing configuration file `%s` failed. Aborting.", this.configFileName);
                 return;
+            }
+
+            Log.put("Server list:");
+            for(String s: mconfig.getServerList()) {
+                Log.put("- server: %s", s);
             }
 
         } catch(IOException e) {
