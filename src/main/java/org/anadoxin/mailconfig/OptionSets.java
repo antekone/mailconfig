@@ -26,4 +26,8 @@ public class OptionSets {
 
         opts.put(valueName, valueData);
     }
+
+    public Map<String, String> getOptionsForOptionSetName(String setName) {
+        return sets.get(setName);
+    }
 }

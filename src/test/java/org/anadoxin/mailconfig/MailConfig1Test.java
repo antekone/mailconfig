@@ -80,4 +80,19 @@ class MailConfig1Test {
         assertEquals(mc.getServerByName("zoho imap").getProtocol(), "imap");
         assertEquals(mc.getServerByName("some pop3").getProtocol(), "pop3");
     }
+
+    @Test
+    void CheckOptions() {
+        assertEquals(mc.getAccountByName("antonone1@gmail.com").getOption("logfile"), "/path/to/antonone1_gmail_com.log");
+        assertEquals(mc.getAccountByName("antonone1@gmail.com").getOption("mda"), "/path/to/mda --args sth");
+        assertEquals(mc.getAccountByName("antonone1@gmail.com").getOption("interval"), "1");
+
+        assertEquals(mc.getAccountByName("antek11@zoho.com").getOption("logfile"), "/path/to/antek11_zoho_com.log");
+        assertEquals(mc.getAccountByName("antek11@zoho.com").getOption("mda"), "/path/to/mda --args sth");
+        assertEquals(mc.getAccountByName("antek11@zoho.com").getOption("interval"), "1");
+
+        assertEquals(mc.getAccountByName("third@sth.com").getOption("logfile"), "/shadowed");
+        assertEquals(mc.getAccountByName("third@sth.com").getOption("mda"), "/path/to/mda --args sth");
+        assertEquals(mc.getAccountByName("third@sth.com").getOption("interval"), "1");
+    }
 }

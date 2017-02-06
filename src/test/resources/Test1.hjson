@@ -21,9 +21,15 @@
 
     "option sets": {
         "standard": {
-            logfile:   "/path/to/${AccountName}.log"
+            accname:   "${AccountNameId}"
+            logfile:   "/path/to/${AccountNameId}.log"
             mda:       "/path/to/mda --args sth"
             interval:  "1"
+        }
+
+        "extended": {
+            # This should shadow the logfile from previous used option set.
+            logfile:   "/shadowed"
         }
     }
 
@@ -32,14 +38,21 @@
             user:      antonone1@gmail.com
             pass:      somepassw0rd
             server:    gmail imap
-            template:  standard
+            templates: ["standard"]
         }
 
         "antek11@zoho.com": {
             user:      antek11@zoho.com
             pass:      "fqw9fh-qfgq-e0i"
             server:    zoho imap
-            template:  standard
+            templates: ["standard"]
+        }
+
+        "third@sth.com": {
+            user:      some_user
+            pass:      some_pass
+            server:    gmail imap
+            templates: ["standard", "extended"]
         }
     }
 }

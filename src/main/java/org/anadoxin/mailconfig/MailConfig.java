@@ -11,7 +11,7 @@ public class MailConfig {
     private List<UserAccount> accounts = new ArrayList<UserAccount>();
 
     public MailConfig() {
-
+        Log.put("----- MailConfig instance -----");
     }
 
     public boolean initFromReader(Reader rdr) {
@@ -28,6 +28,11 @@ public class MailConfig {
 
             if(!initAccounts()) {
                 Log.put("Failure during initAccounts");
+                return false;
+            }
+
+            if(!initTemplates()) {
+                Log.put("Failure during template resolution");
                 return false;
             }
 
@@ -83,6 +88,15 @@ public class MailConfig {
         return si;
     }
 
+    public UserAccount getAccountByName(String name) {
+        for(UserAccount acc: accounts) {
+            if(acc.getName().compareTo(name) == 0)
+                return acc;
+        }
+
+        return null;
+    }
+
     private boolean initAccounts() {
         try {
             for(JsonObject.Member m: this.config.get("accounts").asObject()) {
@@ -112,7 +126,11 @@ public class MailConfig {
         acc.setUser(value.get("user").asString());
         acc.setPass(value.get("pass").asString());
         acc.setServer(value.get("server").asString());
-        acc.setTemplate(value.get("template").asString());
+
+        for(JsonValue item: value.get("templates").asArray()) {
+            acc.getTemplates().add(item.asString());
+        }
+
         return acc;
     }
 
@@ -138,8 +156,25 @@ public class MailConfig {
             final String valueName = m.getName();
             final String valueData = m.getValue().asString();
 
-            Log.put("adding option set %s / %s=%s", name, valueName, valueData);
             this.optionSets.setOption(name, valueName, valueData);
         }
+    }
+
+    private boolean initTemplates() {
+        for(UserAccount acc: accounts) {
+            for(String templateName: acc.getTemplates()) {
+                Map<String, String> options = this.optionSets.getOptionsForOptionSetName(templateName);
+                if(options == null) {
+                    Log.put("Error: can't locate option set '%s', defined as template in account '%s'.",
+                        templateName, acc.getName());
+
+                    return false;
+                }
+
+                options.forEach((k, v) -> acc.setOption(k, v));
+            }
+        }
+
+        return true;
     }
 }
