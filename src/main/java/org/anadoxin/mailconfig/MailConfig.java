@@ -68,6 +68,10 @@ public class MailConfig {
         return servers.keySet().stream().collect(Collectors.toList());
     }
 
+    public List<String> getAccountList() {
+        return accounts.keySet().stream().collect(Collectors.toList());
+    }
+
     public ServerInfo getServerByName(String name) {
         return servers.get(name);
     }

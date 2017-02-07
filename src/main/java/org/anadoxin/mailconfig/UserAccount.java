@@ -31,4 +31,8 @@ public class UserAccount {
         s = data.replace("${AccountNameId}", name.replace("@", "_").replace(".", "_"));
         return s;
     }
+
+    public Set<String> getOptionKeySet() {
+        return options.keySet();
+    }
 }

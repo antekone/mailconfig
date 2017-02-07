@@ -35,4 +35,8 @@ public class ServerInfo {
     public boolean isWantSSL() {
         return getOption("ssl", "false").compareTo("true") == 0;
     }
+
+    public boolean isWantIdle() {
+        return getOption("idle", "false").compareTo("true") == 0;
+    }
 }

@@ -68,6 +68,7 @@ class Boot {
 
             RendererQueue rq = new RendererQueue();
             rq.setMailConfig(mconfig);
+            rq.addRenderer(new PrintRenderer());
             rq.addRenderer(new FetchmailRenderer());
             rq.run();
         } catch(IOException e) {
