@@ -65,6 +65,11 @@ class Boot {
                 Log.put("Error: processing configuration file `%s` failed. Aborting.", this.configFileName);
                 return;
             }
+
+            RendererQueue rq = new RendererQueue();
+            rq.setMailConfig(mconfig);
+            rq.addRenderer(new FetchmailRenderer());
+            rq.run();
         } catch(IOException e) {
             Log.put("IOException: %s", e.toString());
         }
