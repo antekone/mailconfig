@@ -4,14 +4,24 @@ import org.anadoxin.mailconfig.boot.*;
 import java.io.*;
 import org.hjson.*;
 import java.util.*;
+import java.util.stream.*;
 
 public class MailConfig {
     private JsonObject config;
     private OptionSets optionSets = new OptionSets();
-    private List<UserAccount> accounts = new ArrayList<UserAccount>();
+
+    private Map<String, UserAccount> accounts = new Hashtable<String, UserAccount>();
+    private Map<String, ServerInfo> servers = new Hashtable<String, ServerInfo>();
+
+    private interface JsonProcessCallback<T> {
+        T process(String itemName, JsonObject object);
+    }
+
+    private interface JsonStoreCallback<T> {
+        void store(String itemName, T object);
+    }
 
     public MailConfig() {
-        Log.put("----- MailConfig instance -----");
     }
 
     public boolean initFromReader(Reader rdr) {
@@ -21,12 +31,23 @@ public class MailConfig {
         try {
             this.config = JsonValue.readHjson(rdr).asObject();
 
-            if(!initOptionSets()) {
+            if(!initSection("option sets",
+                    (name, object) -> processOptionSet(name, object),
+                    (name, object) -> { })) {
                 Log.put("Failure during initOptionSets");
                 return false;
             }
 
-            if(!initAccounts()) {
+            if(!initSection("servers",
+                    (name, object) -> processServer(name, object),
+                    (name, object) -> { servers.put(name, object); })) {
+                Log.put("Failure during initServers");
+                return false;
+            }
+
+            if(!initSection("accounts",
+                    (name, object) -> processAccount(name, object),
+                    (name, object) -> { accounts.put(name, object); })) {
                 Log.put("Failure during initAccounts");
                 return false;
             }
@@ -44,80 +65,50 @@ public class MailConfig {
     }
 
     public List<String> getServerList() {
-        try {
-            return this.config.get("servers").asObject().names();
-        } catch(UnsupportedOperationException e) {
-            Log.put("can't cast 'servers' from HJSON to Array");
-            return null;
-        }
-    }
-
-    public ServerInfo getServerByJsonValue(JsonValue jv) throws UnsupportedOperationException {
-        ServerInfo si = new ServerInfo();
-        JsonObject jo = jv.asObject();
-
-        si.setHostName(jo.get("hostname").asString());
-        si.setWantSSL(jo.get("ssl").asBoolean());
-        si.setProtocol(jo.get("protocol").asString());
-
-        return si;
-    }
-
-    private JsonValue getJsonValueInDict(JsonValue collection, String settingKey) {
-        try {
-            for(JsonObject.Member n: collection.asObject()) {
-                if(n.getName().compareTo(settingKey) == 0) {
-                    return n.getValue();
-                }
-            }
-        } catch(UnsupportedOperationException e) {
-            Log.put("Can't find value when searching for `%s`: %s", settingKey, e.getMessage());
-        }
-
-        return null;
+        return servers.keySet().stream().collect(Collectors.toList());
     }
 
     public ServerInfo getServerByName(String name) {
-        JsonValue serverObject = getJsonValueInDict(this.config.get("servers"), name);
-        if(serverObject == null) {
-            Log.put("can't find selected server: `%s`", name);
-            return null;
-        }
-
-        ServerInfo si = getServerByJsonValue(serverObject);
-        return si;
+        return servers.get(name);
     }
 
     public UserAccount getAccountByName(String name) {
-        for(UserAccount acc: accounts) {
-            if(acc.getName().compareTo(name) == 0)
-                return acc;
-        }
-
-        return null;
+        return accounts.get(name);
     }
 
-    private boolean initAccounts() {
+    private <T> boolean initSection(String jsonNodeName, JsonProcessCallback<T> process, JsonStoreCallback<T> store) {
         try {
-            for(JsonObject.Member m: this.config.get("accounts").asObject()) {
-                final String accName = m.getName();
-                final JsonValue accValue = m.getValue();
+            for(JsonObject.Member m: this.config.get(jsonNodeName).asObject()) {
+                final String name = m.getName();
+                final JsonValue value = m.getValue();
 
-                UserAccount acc = processAccount(accName, accValue.asObject());
-                if(acc == null) {
-                    Log.put("Error while defining account '%s'", accName);
-                    break;
+                T item = process.process(name, value.asObject());
+                if(item == null) {
+                    Log.put("Error while defining object: '%s'", name);
+                    return false;
                 }
 
-                accounts.add(acc);
+                store.store(name, item);
             }
 
             return true;
         } catch(UnsupportedOperationException e) {
-            Log.put("UnsupportedOperationException during initAccounts(): %s", e.getMessage());
+            Log.put("UnsupportedOperationException during initSection, where node name is '%s': %s",
+                jsonNodeName, e.getMessage());
+
         }
 
         return false;
+    }
+
+    private ServerInfo processServer(String name, JsonObject value) {
+        ServerInfo si = new ServerInfo();
+
+        for(JsonObject.Member m: value) {
+            si.setOption(m.getName(), m.getValue().asString());
+        }
+
+        return si;
     }
 
     private UserAccount processAccount(String name, JsonObject value) {
@@ -134,39 +125,27 @@ public class MailConfig {
         return acc;
     }
 
-    private boolean initOptionSets() {
-        try {
-            for(JsonObject.Member m: this.config.get("option sets").asObject()) {
-                final String setName = m.getName();
-                final JsonValue setValue = m.getValue();
-
-                processOptionSet(setName, setValue.asObject());
-            }
-
-            return true;
-        } catch(UnsupportedOperationException e) {
-            Log.put("UnsupportedOperationException during initOptionSets(): %s", e.getMessage());
-        }
-
-        return false;
-    }
-
-    private void processOptionSet(String name, JsonObject dict) {
+    private boolean processOptionSet(String name, JsonObject dict) {
         for(JsonObject.Member m: dict) {
             final String valueName = m.getName();
             final String valueData = m.getValue().asString();
 
             this.optionSets.setOption(name, valueName, valueData);
         }
+
+        return true;
     }
 
     private boolean initTemplates() {
-        for(UserAccount acc: accounts) {
+        for(Map.Entry<String, UserAccount> entry: accounts.entrySet()) {
+            UserAccount acc = entry.getValue();
+            String accName = entry.getKey();
+
             for(String templateName: acc.getTemplates()) {
                 Map<String, String> options = this.optionSets.getOptionsForOptionSetName(templateName);
                 if(options == null) {
                     Log.put("Error: can't locate option set '%s', defined as template in account '%s'.",
-                        templateName, acc.getName());
+                        templateName, accName);
 
                     return false;
                 }

@@ -36,8 +36,8 @@ class MailConfig1Test {
     @Test
     void ListServersValid() {
         List<String> servers = mc.getServerList();
-        assertEquals(servers.get(0), "gmail imap");
-        assertEquals(servers.get(1), "zoho imap");
+        assertTrue(servers.contains("gmail imap"));
+        assertTrue(servers.contains("zoho imap"));
     }
 
     @Test

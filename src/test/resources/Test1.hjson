@@ -2,19 +2,19 @@
     "servers": {
         "gmail imap": {
             hostname: imap.gmail.com
-            ssl: true
+            ssl: "true"
             protocol: imap
         },
 
         "zoho imap": {
             hostname: imap.zoho.com
-            ssl: false
+            ssl: "false"
             protocol: imap
         }
 
         "some pop3": {
             hostname: some.pop3.com
-            ssl: false
+            ssl: "false"
             protocol: pop3
         }
     }
