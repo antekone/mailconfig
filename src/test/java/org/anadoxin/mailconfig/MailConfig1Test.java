@@ -75,6 +75,11 @@ class MailConfig1Test {
     }
 
     @Test
+    void GetNonexistantOption() {
+        assertEquals(mc.getAccountByName("antonone1@gmail.com").getOption("wtf"), null);
+    }
+
+    @Test
     void GetServerByName4Protocol() {
         assertEquals(mc.getServerByName("gmail imap").getProtocol(), "imap");
         assertEquals(mc.getServerByName("zoho imap").getProtocol(), "imap");

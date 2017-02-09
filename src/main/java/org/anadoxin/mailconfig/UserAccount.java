@@ -23,6 +23,9 @@ public class UserAccount {
 
     public String getOption(String name) {
         String value = this.options.get(name);
+        if(value == null)
+            return null;
+
         return preprocess(value);
     }
 
