@@ -12,6 +12,15 @@ public class MailConfig {
 
     private Map<String, UserAccount> accounts = new Hashtable<String, UserAccount>();
     private Map<String, ServerInfo> servers = new Hashtable<String, ServerInfo>();
+    private Map<String, String> globals = new Hashtable<String, String>();
+
+    private interface JsonProcessFlatCallback {
+        boolean process(String itemName, String value);
+    }
+
+    private interface JsonStoreFlatCallback {
+        void store(String itemName, String itemValue);
+    }
 
     private interface JsonProcessCallback<T> {
         T process(String itemName, JsonObject object);
@@ -30,6 +39,12 @@ public class MailConfig {
 
         try {
             this.config = JsonValue.readHjson(rdr).asObject();
+
+            if(!initFlatSection("global",
+                    (name, value) -> { globals.put(name, value); })) {
+                Log.put("Failure during initGlobals");
+                return false;
+            }
 
             if(!initSection("option sets",
                     (name, object) -> processOptionSet(name, object),
@@ -64,6 +79,10 @@ public class MailConfig {
         }
     }
 
+    public String getGlobal(String name) {
+        return globals.get(name);
+    }
+
     public List<String> getServerList() {
         return servers.keySet().stream().collect(Collectors.toList());
     }
@@ -80,9 +99,40 @@ public class MailConfig {
         return accounts.get(name);
     }
 
+    private <T> boolean initFlatSection(String jsonNodeName, JsonStoreFlatCallback store) {
+        try {
+            JsonValue nodeValue = this.config.get(jsonNodeName);
+            if(nodeValue == null) {
+                // Need to return 'true', because some sections are optional, so we need to
+                // check for validity somewhere else.
+                return true;
+            }
+
+            for(JsonObject.Member m: nodeValue.asObject()) {
+                final String name = m.getName();
+                final String value = m.getValue().asString();
+                store.store(name, value);
+            }
+
+            return true;
+        } catch(UnsupportedOperationException e) {
+            Log.put("UnsupportedOperationException during initSection, where node name is '%s': %s",
+                jsonNodeName, e.getMessage());
+        }
+
+        return false;
+    }
+
     private <T> boolean initSection(String jsonNodeName, JsonProcessCallback<T> process, JsonStoreCallback<T> store) {
         try {
-            for(JsonObject.Member m: this.config.get(jsonNodeName).asObject()) {
+            JsonValue nodeValue = this.config.get(jsonNodeName);
+            if(nodeValue == null) {
+                // Need to return 'true', because some sections are optional, so we need to
+                // check for validity somewhere else.
+                return true;
+            }
+
+            for(JsonObject.Member m: nodeValue.asObject()) {
                 final String name = m.getName();
                 final JsonValue value = m.getValue();
 
@@ -99,7 +149,6 @@ public class MailConfig {
         } catch(UnsupportedOperationException e) {
             Log.put("UnsupportedOperationException during initSection, where node name is '%s': %s",
                 jsonNodeName, e.getMessage());
-
         }
 
         return false;

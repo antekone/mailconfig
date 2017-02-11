@@ -66,10 +66,12 @@ class Boot {
                 return;
             }
 
+            CommonContext ctx = new CommonContext();
             RendererQueue rq = new RendererQueue();
             rq.setMailConfig(mconfig);
             rq.addRenderer(new PrintRenderer());
-            rq.addRenderer(new FetchmailRenderer());
+            rq.addRenderer(new FetchmailRenderer(ctx));
+            rq.addRenderer(new InvokerRenderer(ctx));
             rq.run();
         } catch(IOException e) {
             Log.put("IOException: %s", e.toString());
